@@ -1,14 +1,20 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
-export default function LoadingAnimation() {
+interface LoadingAnimationProps {
+  progress?: number
+  onCancel?: () => void
+}
+
+export default function LoadingAnimation({ progress = 0, onCancel }: LoadingAnimationProps) {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <Card className="bg-card p-12 rounded-3xl border-2 border-border shadow-lg max-w-md w-full">
         <div className="text-center space-y-8">
           <h2 className="text-3xl font-bold text-foreground">Analyzing Video</h2>
-          <p className="text-muted-foreground text-lg">This may take up to 1 minute...</p>
+          <p className="text-muted-foreground text-lg">This may take some time for long videos...</p>
 
           {/* Animated Vehicle Icons (use project icons instead of emoji) */}
           <div className="flex justify-center items-center gap-4 h-24">
@@ -31,24 +37,32 @@ export default function LoadingAnimation() {
             ))}
           </div>
 
-          {/* Animated Progress Bar */}
+          {/* Progress Bar */}
           <div className="space-y-3">
-            <div className="w-full bg-input rounded-full h-3 overflow-hidden border-2 border-border">
+            <div className="w-full bg-input rounded-full h-4 overflow-hidden border-2 border-border">
               <div
-                className="h-full bg-gradient-to-r from-primary via-secondary to-accent rounded-full"
-                style={{
-                  animation: "shimmer 2s infinite",
-                  backgroundSize: "200% 100%",
-                }}
+                className="h-full bg-gradient-to-r from-primary via-secondary to-accent rounded-full transition-all"
+                style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
               />
             </div>
-            <p className="text-sm text-muted-foreground font-semibold">Processing...</p>
+            <p className="text-sm text-muted-foreground font-semibold">Processing... {progress.toFixed(1)}%</p>
           </div>
 
-          {/* Floating Text */}
+          {/* Floating Text + Cancel */}
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p>Detecting vehicles...</p>
+            <p>Detecting vehicles in frames — you'll get intermediate results if you cancel.</p>
             <p className="text-xs opacity-75">Please wait while we analyze your video</p>
+          </div>
+
+          <div className="pt-4">
+            <Button 
+              variant="destructive" 
+              onClick={onCancel} 
+              className="w-40 mx-auto"
+              disabled={!onCancel}
+            >
+              Cancel and Get Results
+            </Button>
           </div>
 
           <style>{`
