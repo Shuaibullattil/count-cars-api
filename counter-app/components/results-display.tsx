@@ -14,10 +14,13 @@ interface ResultsDisplayProps {
 }
 
 const vehicleIcons: Record<string, string> = {
-  car: "🚗",
-  bus: "🚌",
-  bike: "🏍️",
-  autorickshaw: "🚙",
+  car: "car.svg",
+  bus: "bus.svg",
+  bike: "bike.svg",
+  autorickshaw: "autorickshaw.svg",
+  cycle: "cycle.svg",
+  truck: "truck.svg",
+  "heavy vehicle": "heavy vehicle.svg",
 }
 
 export default function ResultsDisplay({ results, onReset }: ResultsDisplayProps) {
@@ -45,12 +48,13 @@ export default function ResultsDisplay({ results, onReset }: ResultsDisplayProps
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {vehicleClasses.map(([vehicleClass, count]) => {
             const percentage = (count / results.total_vehicles) * 100
-            const icon = vehicleIcons[vehicleClass] || "🚗"
+            const iconFile = vehicleIcons[vehicleClass] || "car.svg"
+            const iconUrl = `/vehicle-icons/${encodeURIComponent(iconFile)}`
 
             return (
               <div key={vehicleClass} className="bg-input rounded-2xl p-6 border-2 border-border">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="text-5xl">{icon}</div>
+                  <img src={iconUrl} alt={vehicleClass} className="w-12 h-12 object-contain" />
                   <div>
                     <p className="text-sm text-muted-foreground uppercase font-semibold capitalize">{vehicleClass}</p>
                     <p className="text-3xl font-bold text-foreground">{count}</p>

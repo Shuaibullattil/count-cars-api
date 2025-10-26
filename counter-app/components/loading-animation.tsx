@@ -10,20 +10,25 @@ export default function LoadingAnimation() {
           <h2 className="text-3xl font-bold text-foreground">Analyzing Video</h2>
           <p className="text-muted-foreground text-lg">This may take up to 1 minute...</p>
 
-          {/* Animated Vehicle Icons */}
+          {/* Animated Vehicle Icons (use project icons instead of emoji) */}
           <div className="flex justify-center items-center gap-4 h-24">
-            <div className="animate-bounce" style={{ animationDelay: "0s" }}>
-              <div className="text-6xl">🚗</div>
-            </div>
-            <div className="animate-bounce" style={{ animationDelay: "0.2s" }}>
-              <div className="text-6xl">🚌</div>
-            </div>
-            <div className="animate-bounce" style={{ animationDelay: "0.4s" }}>
-              <div className="text-6xl">🏍️</div>
-            </div>
-            <div className="animate-bounce" style={{ animationDelay: "0.6s" }}>
-              <div className="text-6xl">🚙</div>
-            </div>
+            {[
+              "car.svg",
+              "bus.svg",
+              "bike.svg",
+              "autorickshaw.svg",
+              "cycle.svg",
+              "truck.svg",
+              "heavy vehicle.svg",
+            ].map((file, i) => (
+              <div key={file} className="animate-bounce" style={{ animationDelay: `${i * 0.08}s` }}>
+                <img
+                  src={`/vehicle-icons/${encodeURIComponent(file)}`}
+                  alt={file.replace(/\.svg$/, "")}
+                  className="w-14 h-14 object-contain"
+                />
+              </div>
+            ))}
           </div>
 
           {/* Animated Progress Bar */}
