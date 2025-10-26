@@ -23,10 +23,23 @@ jobs_lock = threading.Lock()
 
 def process_job(job_id: str, video_path: str, orientation: str, position: int):
     try:
+        print(f"\nOpening video: {video_path}")
         cap = cv2.VideoCapture(video_path)
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        
+        # Get video properties with error checking
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        
+        print(f"Video properties:")
+        print(f"- Total frames: {total_frames}")
+        print(f"- FPS: {fps}")
+        print(f"- Resolution: {width}x{height}")
+        
+        # Calculate total duration
+        total_duration = total_frames / fps if fps > 0 else 0
+        print(f"- Total duration: {total_duration:.2f} seconds")
         # Calculate line position
         if orientation == "horizontal":
             line_pos = int(height * position / 100)
@@ -126,11 +139,26 @@ def process_job(job_id: str, video_path: str, orientation: str, position: int):
             with jobs_lock:
                 job = jobs.get(job_id)
                 if job is not None and total_frames > 0:  # Only update if we have valid total_frames
+                    # Update frame counts
                     job["processed_frames"] = frame_count
                     job["total_frames"] = total_frames
-                    # Calculate progress as float and round to 1 decimal
-                    progress = round((frame_count / total_frames * 100), 1)
-                    job["progress"] = float(progress)  # Ensure it's a float
+                    job["fps"] = fps
+                    
+                    # Calculate progress and durations
+                    progress = (frame_count / total_frames * 100)
+                    processed_duration = frame_count / fps if fps > 0 else 0
+                    
+                    print(f"\nProgress update:")
+                    print(f"- Frame: {frame_count}/{total_frames}")
+                    print(f"- Progress: {progress:.1f}%")
+                    print(f"- Processed duration: {processed_duration:.2f}s")
+                    print(f"- Total duration: {total_duration:.2f}s")
+                    
+                    # Update job state
+                    job["progress"] = float(progress)
+                    job["processed_duration"] = float(processed_duration)
+                    job["total_duration"] = float(total_duration)
+                    
                     # map class ids to names for snapshot
                     class_names = model.names
                     job["total_vehicles"] = total_count
@@ -170,17 +198,38 @@ async def start_count_job(
 
     job_id = str(uuid.uuid4())
     with jobs_lock:
-        jobs[job_id] = {
-            "status": "processing",
-            "progress": 0,
-            "processed_frames": 0,
-            "total_frames": 0,
-            "total_vehicles": 0,
-            "class_counts": {},
-            "cancelled": False,
-        }
-
-    # Start background thread
+            # Get initial video info
+            print(f"\nInitializing job {job_id}")
+            cap = cv2.VideoCapture(video_path)
+            
+            # Get video properties
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            fps = int(cap.get(cv2.CAP_PROP_FPS))
+            if fps == 0:  # Fallback if FPS detection fails
+                fps = 30
+                print("Warning: Could not detect FPS, using default of 30")
+            
+            total_duration = total_frames / fps if fps > 0 else 0
+            
+            print(f"Initial video info:")
+            print(f"- Total frames: {total_frames}")
+            print(f"- FPS: {fps}")
+            print(f"- Total duration: {total_duration:.2f}s")
+            
+            cap.release()
+            
+            jobs[job_id] = {
+                "status": "processing",
+                "progress": 0.0,
+                "processed_frames": 0,
+                "total_frames": total_frames,
+                "total_vehicles": 0,
+                "class_counts": {},
+                "cancelled": False,
+                "fps": fps,
+                "processed_duration": 0.0,
+                "total_duration": float(total_duration),
+            }    # Start background thread
     thread = threading.Thread(target=process_job, args=(job_id, video_path, orientation, position), daemon=True)
     thread.start()
 
@@ -193,15 +242,34 @@ async def get_job_status(job_id: str):
         job = jobs.get(job_id)
         if not job:
             return JSONResponse(content={"error": "job not found"}, status_code=404)
-        # return a shallow copy
+        
+        # Get fps and frame counts
+        processed_frames = job.get("processed_frames", 0)
+        total_frames = job.get("total_frames", 0)
+        fps = job.get("fps", 30)  # default to 30fps if not set
+        
+        # Calculate durations
+        processed_duration = float(processed_frames) / float(fps) if fps > 0 and processed_frames > 0 else 0
+        total_duration = float(total_frames) / float(fps) if fps > 0 and total_frames > 0 else 0
+        
+        # Update job with calculated durations (ensure they're floats)
+        job["processed_duration"] = float(processed_duration)
+        job["total_duration"] = float(total_duration)
+        
+        print(f"Debug - Frames: {processed_frames}/{total_frames}, FPS: {fps}, Durations: {processed_duration}/{total_duration}")
+        
+        # return response with all data
         return JSONResponse(content={
             "status": job.get("status", "error"),
             "progress": float(job.get("progress", 0)),  # Ensure progress is always a float
-            "processed_frames": job.get("processed_frames", 0),
-            "total_frames": job.get("total_frames", 0),
+            "processed_frames": processed_frames,
+            "total_frames": total_frames,
             "total_vehicles": job.get("total_vehicles", 0),
             "class_counts": job.get("class_counts", {}),
             "error": job.get("error"),
+            "processed_duration": processed_duration,
+            "total_duration": total_duration,
+            "fps": fps
         })
 
 

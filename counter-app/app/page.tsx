@@ -20,6 +20,9 @@ export default function Home() {
   const [results, setResults] = useState<any>(null)
   const [jobId, setJobId] = useState<string | null>(null)
   const [progress, setProgress] = useState<number>(0)
+  const [processedDuration, setProcessedDuration] = useState<number>(0)
+  const [totalDuration, setTotalDuration] = useState<number>(0)
+  const [vehicleCounts, setVehicleCounts] = useState<Record<string, number>>({})
   const pollRef = useRef<number | null>(null)
 
   const handleVideoUpload = (file: File) => {
@@ -88,6 +91,28 @@ export default function Home() {
             typeof statusData.progress === "number" ? statusData.progress : 0
           ))
           setProgress(pct)
+
+          // Update duration information and debug log
+          console.log("Status data:", statusData)
+          const processedDur = parseFloat(statusData.processed_duration) || 0
+          const totalDur = parseFloat(statusData.total_duration) || 0
+          
+          console.log("Duration values:", {
+            processed: processedDur,
+            total: totalDur,
+            raw: {
+              processed: statusData.processed_duration,
+              total: statusData.total_duration
+            }
+          })
+          
+          setProcessedDuration(processedDur)
+          setTotalDuration(totalDur)
+
+          // Update live vehicle counts
+          if (statusData.class_counts && typeof statusData.class_counts === "object") {
+            setVehicleCounts(statusData.class_counts)
+          }
 
           if (statusData.status === "done") {
             // finalize results
@@ -201,7 +226,13 @@ export default function Home() {
         )}
 
         {step === "processing" && (
-          <LoadingAnimation progress={progress} onCancel={handleCancel} />
+          <LoadingAnimation 
+            progress={progress} 
+            onCancel={handleCancel}
+            processedDuration={processedDuration}
+            totalDuration={totalDuration}
+            vehicleCounts={vehicleCounts}
+          />
         )}
 
         {step === "results" && results && (

@@ -37,7 +37,12 @@ export async function GET(request: Request) {
       return Response.json({ error: `Backend API error: ${response.statusText}` }, { status: response.status })
     }
     const data = await response.json()
-    return Response.json(data)
+    console.log("Backend response:", data) // Debug log
+    return Response.json({
+      ...data,
+      processed_duration: data.processed_duration || 0,
+      total_duration: data.total_duration || 0
+    })
   } catch (error) {
     console.error("[v0] API route GET error:", error)
     return Response.json({ error: "Failed to fetch job status." }, { status: 500 })
