@@ -13,7 +13,7 @@ The REST API (FastAPI) endpoint accepts a video upload and two parameters:
 - `orientation`: `horizontal` or `vertical` (which direction the counting line should be)
 - `position`: integer 0–100 that places the line as a percentage across the frame (0 = top/left, 100 = bottom/right, 50 = centre)
 
-Note: The API implementation is provided in `traffic/api.py` (place your `best.pt` in the same folder as the API before running).
+Note: The API implementation is provided in `api.py` (place your `best.pt` in the same folder as the API before running).
 
 ## Detected vehicle classes
 
@@ -27,8 +27,6 @@ The model is trained to detect these 7 vehicle classes commonly seen on Indian r
 - `heavy_vehicle`
 - `truck`
 
-These class names match the project `data.yaml` (see `traffic/data.yaml`) and are used in the JSON/Excel output `class_counts`.
-
 ## Terms
 
 - video: The video file uploaded by the user for counting (mp4, mov, etc.). The API accepts the file via multipart/form-data.
@@ -37,31 +35,7 @@ These class names match the project `data.yaml` (see `traffic/data.yaml`) and ar
   - For `horizontal` orientation: 0 means the top of the frame, 100 means the bottom.
   - For `vertical` orientation: 0 means the left edge of the frame, 100 means the right edge.
 
-## Running locally (inference.py)
-
-If you want to run the local script instead of the API, `inference.py` provides an interactive run where you are prompted for the orientation and the position. Steps:
-
-1. Ensure `best.pt` (your trained model) is placed next to `traffic/inference.py` or update the path in the script.
-2. Install dependencies:
-
-```powershell
-pip install -r traffic/requirements.txt
-```
-
-3. Run inference script:
-
-```powershell
-python traffic/inference.py
-```
-
-4. Follow the prompts to choose orientation and position. The script will process the default input video (`assets/traffic_predict.mp4`) unless you modify the script.
-
-Outputs:
-
-- Annotated video saved to `traffic/assets/traffic_predict_with_counts.mp4`
-- JSON and Excel results saved to the `traffic/results/` folder (timestamped files)
-
-## Using the API (`traffic/api.py`)
+## Using the API (`api.py`)
 
 The provided FastAPI app exposes a single endpoint:
 
@@ -117,10 +91,10 @@ Notes:
 
 ## How to run the API locally
 
-1. Install dependencies (from `traffic/requirements.txt`):
+1. Install dependencies (from `requirements.txt`):
 
 ```powershell
-pip install -r traffic/requirements.txt
+pip install -r requirements.txt
 ```
 
 2. Start the server (from project root or the `traffic` folder):
