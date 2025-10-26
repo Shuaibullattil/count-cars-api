@@ -10,7 +10,7 @@ from collections import defaultdict
 app = FastAPI()
 
 # Load model at startup
-MODEL_PATH = "runs/detect/train/weights/best.pt"
+MODEL_PATH = "best.pt"
 model = YOLO(MODEL_PATH)
 
 @app.post("/count")
