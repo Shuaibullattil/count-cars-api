@@ -1,0 +1,20 @@
+# Use Node.js image
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY counter-app/package*.json ./
+RUN npm install
+
+# Copy the rest of your Next.js project
+COPY counter-app/ .
+
+# Build Next.js for production
+RUN npm run build
+
+# Expose Next.js port
+EXPOSE 3000
+
+# Start Next.js server
+CMD ["npm", "start"]
